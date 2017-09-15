@@ -8,7 +8,7 @@ API = re.compile('^/?api/?', re.IGNORECASE)
 SERVO = servoServer.Servo()
 
 def main():
-    server_address = ('', 8000)
+    server_address = ('', 80)
     httpd = http.server.HTTPServer(server_address, Dispatch)
     SERVO.set_percent(0)
     try:
