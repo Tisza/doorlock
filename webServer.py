@@ -3,19 +3,29 @@ import io
 import os
 import re
 import servoServer
+import sys
 
 API = re.compile('^/?api/?', re.IGNORECASE)
 SERVO = servoServer.Servo()
+root = os.path.abspath(os.getcwd())
 
 def main():
+    global root
+    args = sys.argv
+    if (len(args) >= 2):
+        root = args[1]
     server_address = ('', 80)
     httpd = http.server.HTTPServer(server_address, Dispatch)
     SERVO.set_percent(0)
+    print('Starting webserver on port 80. Root: ' + root)
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
+        print('Shutting down...')
         httpd.shutdown()
         httpd.server_close()
+        print('Shut down.')
 
 class Dispatch(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -24,6 +34,8 @@ class Dispatch(http.server.BaseHTTPRequestHandler):
             return
         else:
             p = self.sanitized_path()
+            p = root + p
+            print(p)
             if (not os.path.isfile(p)):
                 self.send_error(404)
                 return
@@ -65,9 +77,8 @@ class Dispatch(http.server.BaseHTTPRequestHandler):
     
     def sanitized_path(self):
         safe = re.sub(r'/\.\./', '/\\.\\./' , self.path)
-        safe = safe[1:]
-        if (safe is ''):
-            return "index.html"
+        if (safe is '/'):
+            return "/index.html"
         return safe
 
 if (__name__ == "__main__"):
