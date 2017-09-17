@@ -1,6 +1,8 @@
-control = 12 #BOARD pin
-min = 0.9 #ms
-max = 2.1 #ms
-freq = 50 # hz
-rate = 0.18 # Seconds per 60deg
-
+'''
+Configuration file for the servo.
+'''
+CONTROL = 12 #BOARD pin
+MIN = 0.9 #ms
+MAX = 2.1 #ms
+FREQ = 50 # hz
+RATE = 0.18 # Seconds per 60deg

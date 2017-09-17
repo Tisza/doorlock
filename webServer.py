@@ -1,15 +1,20 @@
+'''
+A simple webServer that spins up a Servo
+'''
 import http.server
-import io
 import os
 import re
-import servoServer
 import sys
+import doorlock.servoServer
 
 API = re.compile('^/?api/?', re.IGNORECASE)
-SERVO = servoServer.Servo()
+SERVO = doorlock.servoServer.Servo()
 root = os.path.abspath(os.getcwd())
 
 def main():
+    '''
+    The main program
+    '''
     global root
     args = sys.argv
     if (len(args) >= 2):
@@ -28,20 +33,27 @@ def main():
         print('Shut down.')
 
 class Dispatch(http.server.BaseHTTPRequestHandler):
+    '''
+    custom HttpRequestHandler to split to the servo library
+    '''
     def do_GET(self):
+        '''
+        dispatches to api if it starts with /api/ otherwise handles like
+        a file server.
+        '''
         if (API.match(self.path)):
-            self.Api()
+            self.api()
             return
         else:
-            p = self.sanitized_path()
-            p = root + p
-            print(p)
-            if (not os.path.isfile(p)):
+            path = self.sanitized_path()
+            path = root + path
+            print(path)
+            if (not os.path.isfile(path)):
                 self.send_error(404)
                 return
-            f = open(p, 'r')
-            out = bytes(f.read(), 'utf-8')
-            f.close()
+            req_file = open(path, 'r')
+            out = bytes(req_file.read(), 'utf-8')
+            req_file.close()
             self.send_response(200)
             self.send_header('content-length', len(out))
             self.end_headers()
@@ -49,24 +61,27 @@ class Dispatch(http.server.BaseHTTPRequestHandler):
             return
 
     def do_POST(self):
-        # although I originally intended for the API to use post, it appears python wants to fight me about reading post data.
+        '''
+        so I apparently can't grab the POST data so I'm just going to
+        ignore this even exists.
+        '''
         self.send_error(405)
         return
 
-    def Api(self):
-        print("API")
-        getPercent = re.compile('^/?api/getpercent', re.IGNORECASE)
-        setPercent = re.compile('^/?api/setpercent\?value=([0-9]+(\.[0-9]+)?)$', re.IGNORECASE)
-        val = setPercent.match(self.path)
+    def api(self):
+        '''
+        Handles api calls based off path
+        '''
+        get_percent = re.compile(r'^/?api/getpercent', re.IGNORECASE)
+        set_percent = re.compile(r'^/?api/setpercent\?value=([0-9]+(\.[0-9]+)?)$', re.IGNORECASE)
+        val = set_percent.match(self.path)
         if (val != None):
             ival = float(val.group(1))
-            print("set: ", ival)
             SERVO.set_percent(ival)
             self.send_response(204)
             self.end_headers()
-        elif (getPercent.match(self.path)):
+        elif (get_percent.match(self.path)):
             ival = SERVO.get_percent()
-            print("get: ", ival)
             self.send_response(200)
             out = bytes(str(ival), 'utf-8')
             self.send_header('content-length', len(out))
@@ -74,10 +89,13 @@ class Dispatch(http.server.BaseHTTPRequestHandler):
             self.wfile.write(out)
         else:
             self.send_error(400)
-    
+
     def sanitized_path(self):
-        safe = re.sub(r'/\.\./', '/\\.\\./' , self.path)
-        if (safe is '/'):
+        '''
+        Sanitizes the request path and adds implied index
+        '''
+        safe = re.sub(r'/\.\./', '/\\.\\./', self.path)
+        if (safe == '/'):
             return "/index.html"
         return safe
 
