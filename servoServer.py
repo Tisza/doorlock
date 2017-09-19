@@ -8,7 +8,7 @@ except RuntimeError:
 
 import os
 import atexit
-import doorlock.config
+import config
 
 class Servo(object):
     '''
@@ -22,14 +22,14 @@ class Servo(object):
             print("ServoServer requires root access.")
             exit(1)
         GPIO.setmode(GPIO.BOARD)
-        if (doorlock.config.CONTROL < 1 or doorlock.config.CONTROL > 40):
+        if (config.CONTROL < 1 or config.CONTROL > 40):
             print("config.py misconfigured. CONTROL must be a Raspberry Pi Board pinout number.")
             exit(1)
-        GPIO.setup(doorlock.config.CONTROL, GPIO.OUT)
-        self.pwm = GPIO.PWM(doorlock.config.CONTROL, doorlock.config.FREQ)
-        length = 1000 / doorlock.config.FREQ
-        self.min_dc = doorlock.config.MIN / length * 100
-        max_dc = doorlock.config.MAX / length * 100
+        GPIO.setup(config.CONTROL, GPIO.OUT)
+        self.pwm = GPIO.PWM(config.CONTROL, config.FREQ)
+        length = 1000 / config.FREQ
+        self.min_dc = config.MIN / length * 100
+        max_dc = config.MAX / length * 100
         self.range_dc = max_dc - self.min_dc
         self.pwm.start(self.min_dc + self.range_dc * self.percent)
         atexit.register(self.cleanup)

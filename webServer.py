@@ -5,10 +5,10 @@ import http.server
 import os
 import re
 import sys
-import doorlock.servoServer
+import servoServer
 
 API = re.compile('^/?api/?', re.IGNORECASE)
-SERVO = doorlock.servoServer.Servo()
+SERVO = servoServer.Servo()
 root = os.path.abspath(os.getcwd())
 
 def main():
